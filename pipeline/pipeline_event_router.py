@@ -1,8 +1,21 @@
 
 
 
-def route_event(event):
+from pipeline.correlator import EventCorrelator
 
-    return event
+correlator = EventCorrelator()
+
+def route(events):
+
+    alerts = []
+
+    for e in events:
+
+        correlator.add_event(e)
+
+    alerts.extend(correlator.detect_patterns())
+
+    return alerts
+
 
 
