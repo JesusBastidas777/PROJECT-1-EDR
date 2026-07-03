@@ -1,9 +1,9 @@
 
 
 
-import time 
+import time
 
-from config import ( 
+from config.settings import (
 
     CPU_THRESHOLD,
     SAFE_PROCESSES,
@@ -62,7 +62,7 @@ def detect_suspicious_process(event) :
     if not image:
 
         return None
-    
+
     image = image.lower()
 
     parent_image = parent_image.lower()
@@ -79,14 +79,14 @@ def detect_suspicious_process(event) :
 
                 "alert" : "Suspicious Process Detected", "severity" : "medium", "technique" : "T1059" ,  "process" : image, "parent" : parent_image
             }
-    
-    if "-enc" in command_line or "/c" in command_line :
+
+    if "-enc" in command_line :
 
         return {
 
             "alert" : "Suspicious Commandline Detected", "severity" : "high" , "technique" : "T1059" , "commandline" : command_line 
         }
-    
+
     suspicious_ips = [
 
         "185",
@@ -102,10 +102,43 @@ def detect_suspicious_process(event) :
 
                 "alert" : "suspicious Network Conecction" , "severity" : "high", "technique" : "T1071", "destination_ip" : destination_ip, "process" : image
             }
-        
+
     return None
 
+def detect(processes):
 
+    alerts = []
 
+    for p in processes:
 
-    
+        event = {
+
+            "Image": p.get("name"),
+
+            "ParentImage": p.get("parent", ""),
+
+            "CommandLine": p.get("cmdline", ""),
+
+            "DestinationIp": p.get("ip", "")
+
+        }
+
+        result = detect_suspicious_process(event)
+
+        if result:
+
+            alerts.append({
+
+                "pid": p.get("pid"),
+
+                "name": p.get("name"),
+
+                "score": 7, #default baseline
+
+                "reason": result["alert"],
+
+                "level": result["severity"].upper()
+
+            })
+
+    return alerts

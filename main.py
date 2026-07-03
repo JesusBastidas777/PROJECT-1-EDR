@@ -2,19 +2,24 @@
 
 
 import time
+
 import psutil
 
 from core.collector import get_system_info, get_processes
+
 from core.logger import log_alerts
-from core.responder import terminate_process
+
 from core.evidence import save_evidence
 
 from detectors.process_detector import detect as process_detect
 
 from state import threat_stats
-from config import AUTO_KILL, AUTO_KILL_SCORE
+
+from config.settings import AUTO_KILL, AUTO_KILL_SCORE
 
 from rich import print
+
+from response.response_engine import handle_alerts
 
 
 # Initialize CPU measurement
@@ -46,14 +51,26 @@ def main():
 
         try:
 
-            alerts.extend(process_detect(processes))
+            alerts = process_detect(processes)
 
         except Exception as e:
 
             print(f"[bold red]ERROR In Detector:[/bold red] {e}")
 
+        actions = handle_alerts(alerts, processes, dry_run=False)
+
+        if actions:
+
+            print("\n[bold red]ACTIONS TAKEN[/bold red]\n")
+
+            for a in actions:
+
+                print(f"[{a['action']}] PID {a.get('pid')} | " f"{a.get('name')} | " f"{a.get('result', a.get('reason'))}" )
+
         print("=" * 80)
+
         print("[bold cyan]SYSTEM MONITOR[/bold cyan]".center(80))
+
         print("=" * 80)
 
         print(f"[white]CPU: {cpu}% | RAM: {ram}%[/white]\n")
@@ -86,7 +103,7 @@ def main():
                     f"{alert['reason']}\n"
                 )
 
-                if alert["score"] >= 7:
+                if alert.get("score", 0) >= 7:
 
                     for p in processes:
 
@@ -94,22 +111,6 @@ def main():
 
                             save_evidence(p)
                             break
-
-                if AUTO_KILL and alert["score"] >= AUTO_KILL_SCORE:
-
-                    success, result = terminate_process(alert["pid"])
-
-                    if success:
-
-                        print(
-                            f"[bold red]TERMINATED:[/bold red] {result}"
-                        )
-
-                    else:
-
-                        print(
-                            f"[bold yellow]FAILED:[/bold yellow] {result}"
-                        )
 
         else:
 

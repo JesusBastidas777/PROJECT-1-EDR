@@ -17,8 +17,8 @@ def get_file_hash(path) :
 
         if not path or not os.path.exists(path) :
 
-            return None 
-        
+            return None
+
         sha256 = hashlib.sha256()
 
         with open(path, "rb") as f :
@@ -28,10 +28,10 @@ def get_file_hash(path) :
                 sha256.update(chunk)
 
         return sha256.hexdigest()
-    
+
     except :
 
-        return None 
+        return None
 
 def get_processes():
 
@@ -46,9 +46,9 @@ def get_processes():
         'cmdline',
         'username',
         'ppid'
-        
+
     ]) :
-        
+
         try :
 
             cpu = p.cpu_percent(interval = None)
@@ -56,9 +56,9 @@ def get_processes():
             parent_name = "Unknown"
 
             try :
-                
+
                 parent = psutil.Process(p.info['ppid'])
-                
+
                 parent_name = parent.name().lower()
 
             except :
@@ -67,23 +67,22 @@ def get_processes():
 
             file_hash = get_file_hash(p.info['exe'])
 
-            
             processes.append({
                 "pid" : p.pid,
                 "name" : p.info['name'],
                 "cpu_percent" : cpu,
                 "exe" : p.info['exe'],
-                "cmdline" : p.info['cmdline'],
+                "cmdline": " ".join(p.info['cmdline']) if p.info['cmdline'] else "",
                 "username" : p.info['username'],
                 "ppid" : p.info['ppid'],
                 "parent_name" : parent_name,
                 "hash" : file_hash
                 })
-            
+
         except(psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) :
 
             continue
-    
+
     return processes
 
 
