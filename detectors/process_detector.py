@@ -59,6 +59,12 @@ def detect_suspicious_process(event) :
 
     command_line = event.get("CommandLine","")
 
+    score = 0
+
+    reasons = []
+
+    severity = "low"
+
     if not image:
 
         return None
@@ -71,22 +77,6 @@ def detect_suspicious_process(event) :
 
     destination_ip = destination_ip.lower()
 
-    for process in suspicious_process :
-
-        if process in image or process in parent_image :
-
-            return {
-
-                "alert" : "Suspicious Process Detected", "severity" : "medium", "technique" : "T1059" ,  "process" : image, "parent" : parent_image
-            }
-
-    if "-enc" in command_line :
-
-        return {
-
-            "alert" : "Suspicious Commandline Detected", "severity" : "high" , "technique" : "T1059" , "commandline" : command_line 
-        }
-
     suspicious_ips = [
 
         "185",
@@ -94,14 +84,45 @@ def detect_suspicious_process(event) :
         "103"
     ]
 
+    for process in suspicious_process:
+
+        if process in image or process in parent_image:
+
+            score += 3
+
+            reasons.append("Suspicious Process")
+
+    if "-enc" in command_line:
+
+        score += 4
+
+        reasons.append("Encoded Powershell Command")
+
     for ip in suspicious_ips :
 
         if destination_ip.startswith(ip) :
 
-            return {
+            score += 3
 
-                "alert" : "suspicious Network Conecction" , "severity" : "high", "technique" : "T1071", "destination_ip" : destination_ip, "process" : image
-            }
+            reasons.append("Supicious Network Connection")
+
+    if score >= 7:
+        severity = "high"
+
+    elif score >= 4:
+        severity = "medium"
+
+    elif score > 0:
+        severity = "low"
+
+    if score > 0:
+        return {
+            "alert": ", ".join(reasons),
+            "severity": severity,
+            "score": score,
+            "technique": "T1059",
+            "process": image
+        }
 
     return None
 
@@ -113,13 +134,19 @@ def detect(processes):
 
         event = {
 
-            "Image": p.get("name"),
+    "Image": p.get("name"),
 
-            "ParentImage": p.get("parent", ""),
+    "ParentImage": p.get("parent_name", ""),
 
-            "CommandLine": p.get("cmdline", ""),
+    "CommandLine": p.get("cmdline", ""),
 
-            "DestinationIp": p.get("ip", "")
+    "DestinationIp": p.get("ip", ""),
+
+    "Exe": p.get("exe", ""),
+
+    "Hash": p.get("hash", ""),
+
+    "Username": p.get("username", "")
 
         }
 
@@ -133,12 +160,11 @@ def detect(processes):
 
                 "name": p.get("name"),
 
-                "score": 7, #default baseline
+                "score": result["score"],
 
                 "reason": result["alert"],
 
                 "level": result["severity"].upper()
-
             })
 
     return alerts
