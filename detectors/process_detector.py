@@ -21,7 +21,10 @@ from config.settings import (
     SUSPICIOUS_PARENTS,
     KNOWN_MALICIOUS_HASHES,
     SUSPICIOUS_EXTENSIONS,
-    SUSPICIOUS_USERS
+    SUSPICIOUS_USERS,
+    SCORE_SUSPICIOUS_PROCESS,
+    SCORE_ENCODED_COMMAND,
+    SCORE_SUSPICIOUS_IP
 
 )
 
@@ -88,13 +91,13 @@ def detect_suspicious_process(event) :
 
         if process in image or process in parent_image:
 
-            score += 3
+            score += SCORE_SUSPICIOUS_PROCESS
 
             reasons.append("Suspicious Process")
 
     if "-enc" in command_line:
 
-        score += 4
+        score += SCORE_ENCODED_COMMAND
 
         reasons.append("Encoded Powershell Command")
 
@@ -102,7 +105,7 @@ def detect_suspicious_process(event) :
 
         if destination_ip.startswith(ip) :
 
-            score += 3
+            score += SCORE_SUSPICIOUS_IP
 
             reasons.append("Supicious Network Connection")
 

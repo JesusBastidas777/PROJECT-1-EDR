@@ -112,3 +112,16 @@ SUSPICIOUS_USERS = [
     "administrador"
     
 ]
+
+# ==========================
+# Detection Scores
+# ==========================
+
+SCORE_SUSPICIOUS_PROCESS = 3
+
+SCORE_ENCODED_COMMAND = 4
+
+SCORE_SUSPICIOUS_IP = 3
+
+
+
