@@ -70,14 +70,15 @@ PROTECTED_PROCESSES = [
 SUSPICIOUS_COMMANDS = [
 
     "-enc",
-    "bypass",
+    "-nop",
+    "-w hidden",
+    "-executionpolicy bypass",
     "downloadstring",
     "invoke-expression",
     "iex",
-    "hidden",
-    "nop",
     "wget",
     "curl"
+
 ]
 
 
@@ -110,7 +111,7 @@ SUSPICIOUS_USERS = [
 
     "system",
     "administrador"
-    
+
 ]
 
 # ==========================
@@ -125,3 +126,24 @@ SCORE_SUSPICIOUS_IP = 3
 
 
 
+# ==========================
+# Detection Lists
+# ==========================
+
+SUSPICIOUS_PROCESSES = [
+
+    "powershell.exe",
+    "cmd.exe",
+    "wscript.exe",
+    "cscript.exe",
+    "rundll32.exe"
+
+]
+
+SUSPICIOUS_IP_PREFIXES = [
+
+    "185",
+    "91",
+    "103"
+
+]

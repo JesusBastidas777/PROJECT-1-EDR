@@ -24,7 +24,9 @@ from config.settings import (
     SUSPICIOUS_USERS,
     SCORE_SUSPICIOUS_PROCESS,
     SCORE_ENCODED_COMMAND,
-    SCORE_SUSPICIOUS_IP
+    SCORE_SUSPICIOUS_IP,
+    SUSPICIOUS_PROCESSES,
+    SUSPICIOUS_IP_PREFIXES
 
 )
 
@@ -44,15 +46,6 @@ from state import (
 from os.path import splitext
 
 def detect_suspicious_process(event) :
-
-    suspicious_process = [
-
-        "powershell.exe",
-        "cmd.exe",
-        "wscript.exe",
-        "cscript.exe",
-        "rundll32.exe"
-    ]
 
     image = event.get("Image")
 
@@ -80,14 +73,7 @@ def detect_suspicious_process(event) :
 
     destination_ip = destination_ip.lower()
 
-    suspicious_ips = [
-
-        "185",
-        "91",
-        "103"
-    ]
-
-    for process in suspicious_process:
+    for process in SUSPICIOUS_PROCESSES:
 
         if process in image or process in parent_image:
 
@@ -95,13 +81,17 @@ def detect_suspicious_process(event) :
 
             reasons.append("Suspicious Process")
 
-    if "-enc" in command_line:
+    arguments = command_line.split()
 
-        score += SCORE_ENCODED_COMMAND
+    for command in SUSPICIOUS_COMMANDS:
 
-        reasons.append("Encoded Powershell Command")
+        if command in arguments:
 
-    for ip in suspicious_ips :
+            score += SCORE_ENCODED_COMMAND
+
+            reasons.append(f"Suspicious Command: {command}")
+
+    for ip in SUSPICIOUS_IP_PREFIXES :
 
         if destination_ip.startswith(ip) :
 
